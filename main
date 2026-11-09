@@ -1,0 +1,21 @@
+mpio · C
+#include <stdio.h>
+ 
+enum {
+    OPC_PARAMETROS = 1,
+    OPC_ORBITA,
+    OPC_PULSO,
+    OPC_HISTORIAL,
+    OPC_REPORTE,
+    OPC_SALIR
+};
+ 
+static void mostrar_menu(void)
+{
+    printf("\n⋯⋯⋯ MENU PRINCIPAL ⋯⋯⋯\n");
+    printf("1- Configurar parametros\n");
+    printf("2- Calcular la orbita \n");
+    printf("3- Simular pulso lateral \n");
+    printf("4- Ver historial de la sesion\n");
+    printf("5- Ver reporte final\n");
+    printf("6- Salir\n");
