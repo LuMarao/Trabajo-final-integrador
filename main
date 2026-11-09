@@ -1,4 +1,4 @@
-mpio · C
+
 #include <stdio.h>
  
 enum {
@@ -19,3 +19,24 @@ static void mostrar_menu(void)
     printf("4- Ver historial de la sesion\n");
     printf("5- Ver reporte final\n");
     printf("6- Salir\n");
+
+ switch (opcion) {
+        case OPC_PARAMETROS:
+            printf("\.\n");
+            break;
+        case OPC_PARAMETROS:
+            printf(".");
+            break;
+        case OPC_PULSO:
+            printf(".\n");
+            break;
+        case OPC_HISTORIAL:
+            printf(".\n");
+            break;
+        case OPC_REPORTE:
+            printf(".\n");
+            break;
+        default:
+            break;
+    }
+}
