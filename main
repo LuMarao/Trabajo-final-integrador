@@ -1,1 +1,340 @@
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <stdio.h>
+#include <string.h>
 
+#define ANCHO_VENTANA      800
+#define ALTO_VENTANA       580
+#define CANTIDAD_OPCIONES  6
+#define TAM_CARACTER       8.0f
+#define ESCALA_TITULO      3.0f
+#define ESCALA_TEXTO       2.0f
+
+#define COLOR_FONDO          249, 238, 226
+#define COLOR_ROSA           255, 203, 188
+#define COLOR_TERRACOTA      221, 179, 152
+#define COLOR_DURAZNO_CLARO  251, 224, 210
+#define COLOR_DURAZNO        248, 197, 173
+#define COLOR_TEXTO           92,  64,  52
+#define COLOR_TEXTO_SUAVE    140, 110,  95
+
+enum {
+    OPC_PARAMETROS = 1,
+    OPC_ORBITA,
+    OPC_PULSO,
+    OPC_HISTORIAL,
+    OPC_REPORTE,
+    OPC_SALIR
+};
+
+typedef enum {
+    PANTALLA_MENU,
+    PANTALLA_PREGUNTA
+} Pantalla;
+
+typedef struct {
+    Pantalla pantalla;
+    int opcion;
+    int seleccionado;
+    int ejecutando;
+} Estado;
+
+static const char *textos_menu[CANTIDAD_OPCIONES] = {
+    "parametros",
+    "Calcular la orbita",
+    "Simular pulso lateral",
+    "historial",
+    "reporte final",
+    "Salir"
+};
+
+static const char *textos_pregunta[2] = {
+    "S - Si",
+    "N - No"
+};
+
+static SDL_FRect botones_menu[CANTIDAD_OPCIONES];
+static SDL_FRect botones_pregunta[2];
+
+static void armar_botones(void)
+{
+    int i;
+
+    for (i = 0; i < CANTIDAD_OPCIONES; i++) {
+        botones_menu[i].x = 40.0f;
+        botones_menu[i].y = 150.0f + (float)i * 60.0f;
+        botones_menu[i].w = 720.0f;
+        botones_menu[i].h = 48.0f;
+    }
+    for (i = 0; i < 2; i++) {
+        botones_pregunta[i].x = 40.0f;
+        botones_pregunta[i].y = 330.0f + (float)i * 72.0f;
+        botones_pregunta[i].w = 720.0f;
+        botones_pregunta[i].h = 56.0f;
+    }
+}
+
+static float ancho_texto(const char *texto, float escala)
+{
+    return (float)strlen(texto) * TAM_CARACTER * escala;
+}
+
+static void dibujar_texto(SDL_Renderer *renderizador, float x, float y, float escala,
+                          const char *texto)
+{
+    SDL_SetRenderScale(renderizador, escala, escala);
+    SDL_RenderDebugText(renderizador, x / escala, y / escala, texto);
+    SDL_SetRenderScale(renderizador, 1.0f, 1.0f);
+}
+
+static void dibujar_texto_centrado_x(SDL_Renderer *renderizador, float y, float escala,
+                                     const char *texto)
+{
+    float x = ((float)ANCHO_VENTANA - ancho_texto(texto, escala)) / 2.0f;
+
+    dibujar_texto(renderizador, x, y, escala, texto);
+}
+
+static void dibujar_franja_paleta(SDL_Renderer *renderizador)
+{
+    static const unsigned char colores[4][3] = {
+        { 255, 203, 188 },
+        { 248, 197, 173 },
+        { 251, 224, 210 },
+        { 221, 179, 152 }
+    };
+    SDL_FRect area;
+    int i;
+
+    area.y = 0.0f;
+    area.w = (float)ANCHO_VENTANA / 4.0f;
+    area.h = 12.0f;
+    for (i = 0; i < 4; i++) {
+        area.x = (float)i * area.w;
+        SDL_SetRenderDrawColor(renderizador, colores[i][0], colores[i][1], colores[i][2], 255);
+        SDL_RenderFillRect(renderizador, &area);
+    }
+}
+
+static void dibujar_boton(SDL_Renderer *renderizador, const SDL_FRect *area,
+                          const char *texto, int seleccionado)
+{
+    float x = area->x + (area->w - ancho_texto(texto, ESCALA_TEXTO)) / 2.0f;
+    float y = area->y + (area->h - TAM_CARACTER * ESCALA_TEXTO) / 2.0f;
+    SDL_FRect interior;
+
+    if (seleccionado) {
+        SDL_SetRenderDrawColor(renderizador, COLOR_DURAZNO, 255);
+    } else {
+        SDL_SetRenderDrawColor(renderizador, COLOR_DURAZNO_CLARO, 255);
+    }
+    SDL_RenderFillRect(renderizador, area);
+
+    SDL_SetRenderDrawColor(renderizador, COLOR_TERRACOTA, 255);
+    SDL_RenderRect(renderizador, area);
+    if (seleccionado) {
+        interior.x = area->x + 1.0f;
+        interior.y = area->y + 1.0f;
+        interior.w = area->w - 2.0f;
+        interior.h = area->h - 2.0f;
+        SDL_RenderRect(renderizador, &interior);
+    }
+
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO, 255);
+    dibujar_texto(renderizador, x, y, ESCALA_TEXTO, texto);
+}
+
+static int indice_boton(const SDL_FRect *botones, int cantidad, float x, float y)
+{
+    int i;
+
+    for (i = 0; i < cantidad; i++) {
+        if (x >= botones[i].x && x < botones[i].x + botones[i].w &&
+            y >= botones[i].y && y < botones[i].y + botones[i].h) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void activar(Estado *estado, int indice)
+{
+    if (estado->pantalla == PANTALLA_MENU) {
+        estado->opcion = indice + 1;
+        if (estado->opcion == OPC_SALIR) {
+            estado->ejecutando = 0;
+            return;
+        }
+        estado->pantalla = PANTALLA_PREGUNTA;
+        estado->seleccionado = 0;
+    } else {
+        if (indice == 0) {
+            estado->pantalla = PANTALLA_MENU;
+            estado->seleccionado = estado->opcion - 1;
+        }
+    }
+}
+
+static void manejar_tecla(Estado *estado, SDL_Keycode tecla)
+{
+    int cantidad = (estado->pantalla == PANTALLA_MENU) ? CANTIDAD_OPCIONES : 2;
+
+    switch (tecla) {
+        case SDLK_UP:
+        case SDLK_LEFT:
+            estado->seleccionado = (estado->seleccionado + cantidad - 1) % cantidad;
+            return;
+        case SDLK_DOWN:
+        case SDLK_RIGHT:
+            estado->seleccionado = (estado->seleccionado + 1) % cantidad;
+            return;
+        case SDLK_RETURN:
+        case SDLK_KP_ENTER:
+            activar(estado, estado->seleccionado);
+            return;
+        default:
+            break;
+    }
+
+    if (estado->pantalla == PANTALLA_MENU) {
+        if (tecla >= SDLK_1 && tecla <= SDLK_6) {
+            activar(estado, (int)(tecla - SDLK_1));
+        } else if (tecla == SDLK_ESCAPE) {
+            estado->ejecutando = 0;
+        }
+    } else {
+        if (tecla == SDLK_S) {
+            activar(estado, 0);
+        } else if (tecla == SDLK_N) {
+            activar(estado, 1);
+        }
+    }
+}
+
+static void dibujar_menu(SDL_Renderer *renderizador, const Estado *estado)
+{
+    int i;
+
+    dibujar_franja_paleta(renderizador);
+
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO, 255);
+    dibujar_texto_centrado_x(renderizador, 36.0f, ESCALA_TITULO, "SIMULADOR");
+    dibujar_texto_centrado_x(renderizador, 86.0f, ESCALA_TEXTO,
+                             "ORION EN ORBITA TERRESTRE BAJA (LEO)");
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO_SUAVE, 255);
+    dibujar_texto_centrado_x(renderizador, 120.0f, ESCALA_TEXTO, "MENU PRINCIPAL");
+
+    for (i = 0; i < CANTIDAD_OPCIONES; i++) {
+        dibujar_boton(renderizador, &botones_menu[i], textos_menu[i], i == estado->seleccionado);
+    }
+
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO_SUAVE, 255);
+    dibujar_texto_centrado_x(renderizador, 540.0f, ESCALA_TEXTO, "Teclas 1-6, flechas + Enter o mouse");
+}
+
+static void dibujar_pregunta(SDL_Renderer *renderizador, const Estado *estado)
+{
+    int i;
+
+    dibujar_franja_paleta(renderizador);
+
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO, 255);
+    dibujar_texto_centrado_x(renderizador, 44.0f, ESCALA_TITULO, "OPCION SELECCIONADA");
+    dibujar_texto_centrado_x(renderizador, 120.0f, ESCALA_TEXTO, textos_menu[estado->opcion - 1]);
+
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO, 255);
+    dibujar_texto_centrado_x(renderizador, 240.0f, ESCALA_TITULO, "Volver al menu principal?");
+
+    for (i = 0; i < 2; i++) {
+        dibujar_boton(renderizador, &botones_pregunta[i], textos_pregunta[i],
+                      i == estado->seleccionado);
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    SDL_Window *ventana = NULL;
+    SDL_Renderer *renderizador = NULL;
+    SDL_Event evento;
+    Estado estado;
+    int indice;
+
+    (void)argc;
+    (void)argv;
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        fprintf(stderr, "No se pudo iniciar SDL: %s\n", SDL_GetError());
+        return 1;
+    }
+    if (!SDL_CreateWindowAndRenderer("Simulador educativo - Orion en LEO",
+                                     ANCHO_VENTANA, ALTO_VENTANA, 0,
+                                     &ventana, &renderizador)) {
+        fprintf(stderr, "No se pudo crear la ventana: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    armar_botones();
+    estado.pantalla = PANTALLA_MENU;
+    estado.opcion = 0;
+    estado.seleccionado = 0;
+    estado.ejecutando = 1;
+
+    while (estado.ejecutando) {
+        while (SDL_PollEvent(&evento)) {
+            switch (evento.type) {
+                case SDL_EVENT_QUIT:
+                    estado.ejecutando = 0;
+                    break;
+                case SDL_EVENT_MOUSE_MOTION:
+                    if (estado.pantalla == PANTALLA_MENU) {
+                        indice = indice_boton(botones_menu, CANTIDAD_OPCIONES,
+                                              evento.motion.x, evento.motion.y);
+                    } else {
+                        indice = indice_boton(botones_pregunta, 2,
+                                              evento.motion.x, evento.motion.y);
+                    }
+                    if (indice >= 0) {
+                        estado.seleccionado = indice;
+                    }
+                    break;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    if (evento.button.button == SDL_BUTTON_LEFT) {
+                        if (estado.pantalla == PANTALLA_MENU) {
+                            indice = indice_boton(botones_menu, CANTIDAD_OPCIONES,
+                                                  evento.button.x, evento.button.y);
+                        } else {
+                            indice = indice_boton(botones_pregunta, 2,
+                                                  evento.button.x, evento.button.y);
+                        }
+                        if (indice >= 0) {
+                            activar(&estado, indice);
+                        }
+                    }
+                    break;
+                case SDL_EVENT_KEY_DOWN:
+                    if (!evento.key.repeat) {
+                        manejar_tecla(&estado, evento.key.key);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        SDL_SetRenderDrawColor(renderizador, COLOR_FONDO, 255);
+        SDL_RenderClear(renderizador);
+        if (estado.pantalla == PANTALLA_MENU) {
+            dibujar_menu(renderizador, &estado);
+        } else {
+            dibujar_pregunta(renderizador, &estado);
+        }
+        SDL_RenderPresent(renderizador);
+        SDL_Delay(16);
+    }
+
+    SDL_DestroyRenderer(renderizador);
+    SDL_DestroyWindow(ventana);
+    SDL_Quit();
+    return 0;
+}
