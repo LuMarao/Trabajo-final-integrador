@@ -15,7 +15,7 @@
 #define COLOR_BOTON_SELECCIONADO   52, 110, 180
 #define COLOR_BORDE                120, 160, 210
 #define COLOR_TEXTO                255, 255, 255
-#define COLOR_TEXTO CELESTE        150,  190,  235
+#define COLOR_TEXTO_CELESTE        150,  190,  235
 #define COLOR_TEXTO_CLARO          200, 200,  200
 #define COLOR_TEXTO_SUAVE          150, 150, 150
 
