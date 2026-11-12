@@ -10,13 +10,14 @@
 #define ESCALA_TITULO      3.0f
 #define ESCALA_TEXTO       2.0f
 
-#define COLOR_FONDO          249, 238, 226
-#define COLOR_ROSA           255, 203, 188
-#define COLOR_TERRACOTA      221, 179, 152
-#define COLOR_DURAZNO_CLARO  251, 224, 210
-#define COLOR_DURAZNO        248, 197, 173
-#define COLOR_TEXTO           92,  64,  52
-#define COLOR_TEXTO_SUAVE    140, 110,  95
+#define COLOR_FONDO                18, 24, 32
+#define COLOR_BOTON                38, 50, 66
+#define COLOR_BOTON_SELECCIONADO   52, 110, 180
+#define COLOR_BORDE                120, 160, 210
+#define COLOR_TEXTO                255, 255, 255
+#define COLOR_TEXTO CELESTE        150,  190,  235
+#define COLOR_TEXTO_CLARO          200, 200,  200
+#define COLOR_TEXTO_SUAVE          150, 150, 150
 
 enum {
     OPC_PARAMETROS = 1,
@@ -98,10 +99,10 @@ static void dibujar_texto_centrado_x(SDL_Renderer *renderizador, float y, float 
 static void dibujar_franja_paleta(SDL_Renderer *renderizador)
 {
     static const unsigned char colores[4][3] = {
-        { 255, 203, 188 },
-        { 248, 197, 173 },
-        { 251, 224, 210 },
-        { 221, 179, 152 }
+        { 38, 50, 66 },
+        { 52, 110, 180 },
+        { 120, 160, 210 },
+        { 150, 190, 235 }
     };
     SDL_FRect area;
     int i;
@@ -124,13 +125,13 @@ static void dibujar_boton(SDL_Renderer *renderizador, const SDL_FRect *area,
     SDL_FRect interior;
 
     if (seleccionado) {
-        SDL_SetRenderDrawColor(renderizador, COLOR_DURAZNO, 255);
+        SDL_SetRenderDrawColor(renderizador, COLOR_BOTON_SELECCIONADO, 255);
     } else {
-        SDL_SetRenderDrawColor(renderizador, COLOR_DURAZNO_CLARO, 255);
+        SDL_SetRenderDrawColor(renderizador, COLOR_BOTON, 255);
     }
     SDL_RenderFillRect(renderizador, area);
 
-    SDL_SetRenderDrawColor(renderizador, COLOR_TERRACOTA, 255);
+    SDL_SetRenderDrawColor(renderizador, COLOR_BORDE, 255);
     SDL_RenderRect(renderizador, area);
     if (seleccionado) {
         interior.x = area->x + 1.0f;
@@ -219,9 +220,10 @@ static void dibujar_menu(SDL_Renderer *renderizador, const Estado *estado)
 
     SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO, 255);
     dibujar_texto_centrado_x(renderizador, 36.0f, ESCALA_TITULO, "SIMULADOR");
+SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO_CELESTE, 255);
     dibujar_texto_centrado_x(renderizador, 86.0f, ESCALA_TEXTO,
                              "ORION EN ORBITA TERRESTRE BAJA (LEO)");
-    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO_SUAVE, 255);
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO_CLARO, 255);
     dibujar_texto_centrado_x(renderizador, 120.0f, ESCALA_TEXTO, "MENU PRINCIPAL");
 
     for (i = 0; i < CANTIDAD_OPCIONES; i++) {
@@ -240,6 +242,7 @@ static void dibujar_pregunta(SDL_Renderer *renderizador, const Estado *estado)
 
     SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO, 255);
     dibujar_texto_centrado_x(renderizador, 44.0f, ESCALA_TITULO, "OPCION SELECCIONADA");
+    SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO_CELESTE, 255);
     dibujar_texto_centrado_x(renderizador, 120.0f, ESCALA_TEXTO, textos_menu[estado->opcion - 1]);
 
     SDL_SetRenderDrawColor(renderizador, COLOR_TEXTO, 255);
@@ -266,7 +269,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "No se pudo iniciar SDL: %s\n", SDL_GetError());
         return 1;
     }
-    if (!SDL_CreateWindowAndRenderer("Simulador educativo - Orion en LEO",
+    if (!SDL_CreateWindowAndRenderer("Simulador - Orion en LEO",
                                      ANCHO_VENTANA, ALTO_VENTANA, 0,
                                      &ventana, &renderizador)) {
         fprintf(stderr, "No se pudo crear la ventana: %s\n", SDL_GetError());
