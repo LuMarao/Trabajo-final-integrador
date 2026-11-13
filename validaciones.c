@@ -88,13 +88,59 @@ int leer_entero(const char *mensaje, int minimo, int maximo)
     return (int)valor;
 }
 
-double leer_real(const char *mensaje, double minimo, double maximo)
+static int solo_caracteres_numericos(const char *texto)
+{
+    while (*texto != '\0')
+    {
+        if (!isspace((unsigned char)*texto) && strchr("0123456789+-.eE", *texto) == NULL)
+        {
+            return 0;
+        }
+        texto++;
+    }
+    return 1;
+}
+ 
+int convertir_real(const char *texto, double minimo, double maximo, double *resultado)
 {
     char buffer[LONGITUD_MAX_ENTRADA];
     char *fin;
     char *coma;
+    double valor;
+ 
+    if (strlen(texto) >= LONGITUD_MAX_ENTRADA)
+    {
+        return VALIDACION_FORMATO;
+    }
+    strcpy(buffer, texto);
+ 
+    while ((coma = strchr(buffer, ',')) != NULL)
+    {
+        *coma = '.';
+    }
+ 
+    errno = 0;
+    valor = strtod(buffer, &fin);
+ 
+    if (fin == buffer || !solo_espacios(fin) || !isfinite(valor) || !solo_caracteres_numericos(buffer))
+    {
+        return VALIDACION_FORMATO;
+    }
+    if (errno == ERANGE || valor < minimo || valor > maximo)
+    {
+        return VALIDACION_RANGO;
+    }
+ 
+    *resultado = valor;
+    return VALIDACION_OK;
+}
+
+double leer_real(const char *mensaje, double minimo, double maximo)
+{
+    char buffer[LONGITUD_MAX_ENTRADA];
     double valor = 0.0;
     int valido = 0;
+    int estado;
 
     do
     {
@@ -102,19 +148,13 @@ double leer_real(const char *mensaje, double minimo, double maximo)
 
         if (leer_linea(buffer, LONGITUD_MAX_ENTRADA))
         {
-            while ((coma = strchr(buffer, ',')) != NULL)
-            {
-                *coma = '.';
-            }
+            estado = convertir_real(buffer, minimo, maximo, &valor);
 
-            errno = 0;
-            valor = strtod(buffer, &fin);
-
-            if (fin == buffer || !solo_espacios(fin) || !isfinite(valor))
+            if (estado == VALIDACION_FORMATO)
             {
                 printf("Error: ingrese un numero real valido.\n");
             }
-            else if (errno == ERANGE || valor < minimo || valor > maximo)
+            else if (estado == VALIDACION_RANGO)
             {
                 printf("Error: el valor debe estar entre %g y %g.\n", minimo, maximo);
             }
