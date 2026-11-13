@@ -25,7 +25,7 @@ test: test_propulsor$(EXE)
  
 # Programa completo (ventana con SDL3, requiere SDL 3.2.0 o mas nuevo).
 # main.c no usa -std=c99/-pedantic porque los headers de SDL3 usan extensiones.
-simulador_sdl$(EXE): main.c artemis.c propulsor.c validaciones.c artemis.h propulsor.h validaciones.h
+simulador_sdl$(EXE): main.c artemis.c propulsor.c validaciones.c artemis.h validaciones.h
 	@pkg-config --exists sdl3 || { echo "ERROR: no se encontro SDL3. En MSYS2 UCRT64: pacman -S mingw-w64-ucrt-x86_64-sdl3"; exit 1; }
 	$(CC) -Wall -Wextra -O2 -o $@ main.c artemis.c propulsor.c validaciones.c $(SDL_FLAGS) $(LDLIBS)
  
