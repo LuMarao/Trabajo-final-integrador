@@ -1,92 +1,66 @@
-#ifndef ARTEMIS_H
-#define ARTEMIS_H
+#include <math.h>
+#include "artemis.h"
 
-#define PI              3.14159265358979323846
-#define G_GRAVITACION   6.674e-11      /* N*m^2/kg^2 */
+void cargar_valores_originales(DatosOrbita *orbita, DatosPropulsor *propulsor)
+{
+    orbita->masa_tierra  = MASA_TIERRA_DEF;
+    orbita->radio_tierra = RADIO_TIERRA_DEF;
+    orbita->altitud      = ALTITUD_DEF;
+    orbita->masa_nave    = MASA_ORION_DEF;
 
-#define MASA_TIERRA_DEF  5.972e24      /* kg */
-#define RADIO_TIERRA_DEF 6371000.0     /* m  */
-#define ALTITUD_DEF      192000.0      /* m  */
-#define MASA_ORION_DEF   33000.0       /* kg */
-#define ACEL_PULSO_DEF   0.50          /* m/s^2 */
-#define DT_PULSO_DEF     10.0          /* s */
+    propulsor->aceleracion = ACEL_PULSO_DEF;
+    propulsor->duracion    = DT_PULSO_DEF;
+}
 
-#define ALTITUD_MIN      160000.0      /* m */
-#define ALTITUD_MAX      2000000.0     /* m */
-#define MASA_NAVE_MIN    1.0           /* kg */
-#define MASA_NAVE_MAX    1.0e6         /* kg */
-#define ACEL_PULSO_MIN   0.01          /* m/s^2 */
-#define ACEL_PULSO_MAX   10.0          /* m/s^2 */
-#define DT_PULSO_MIN     0.1           /* s */
-#define DT_PULSO_MAX     60.0          /* s */
+double calcular_radio_orbital(const DatosOrbita *orbita)
+{
+    return orbita->radio_tierra + orbita->altitud;
+}
 
-typedef struct {
-    double masa_tierra;    /* MT, kg */
-    double radio_tierra;   /* RT, m  */
-    double altitud;        /* h,  m  */
-    double masa_nave;      /* m,  kg */
-} DatosOrbita;
+double calcular_fuerza_gravitatoria(const DatosOrbita *orbita)
+{
+    double radio = calcular_radio_orbital(orbita);
 
-typedef struct {
-    double radio_orbital;          /* r = RT + h, m */
-    double fuerza_gravitatoria;    /* Fg, N */
-    double velocidad_orbital;      /* v, m/s */
-    double periodo_s;              /* T, segundos */
-    double periodo_min;            /* T, minutos */
-    double aceleracion_centripeta; /* ac, m/s^2 */
-} ResultadosOrbita;
+    return G_GRAVITACION * orbita->masa_tierra * orbita->masa_nave / (radio * radio);
+}
 
-typedef struct {
-    double aceleracion;    /* a,  m/s^2 */
-    double duracion;       /* dt, s */
-} DatosPropulsor;
+double calcular_velocidad_orbital(const DatosOrbita *orbita)
+{
+    double radio = calcular_radio_orbital(orbita);
 
-typedef struct {
-    double velocidad_lateral;   /* dv = a*dt, m/s */
-    double desviacion_lateral;  /* d = 1/2*a*dt^2, m */
-    double velocidad_nueva;     /* v' = sqrt(v^2 + dv^2), m/s */
-    double giro_grados;         /* atan(dv/v), grados */
-    double excentricidad;       /* e de la nueva orbita */
-    double aumento_apoapsis;    /* variacion del apoapsis, m */
-    double separacion_maxima;   /* separacion lateral maxima, m */
-} ResultadosPropulsor;
+    return sqrt(G_GRAVITACION * orbita->masa_tierra / radio);
+}
 
-#define MAX_HISTORIAL    15            /* cantidad maxima de registros guardados */
+double calcular_periodo_orbital(const DatosOrbita *orbita)
+{
+    double radio     = calcular_radio_orbital(orbita);
+    double velocidad = calcular_velocidad_orbital(orbita);
 
-typedef enum {
-    REGISTRO_ORBITA = 1,
-    REGISTRO_PULSO
-} TipoRegistro;
+    return 2.0 * PI * radio / velocidad;
+}
 
-typedef struct {
-    TipoRegistro tipo;
-    double altitud;             /* h, m           (REGISTRO_ORBITA) */
-    double velocidad_orbital;   /* v, m/s         (REGISTRO_ORBITA) */
-    double periodo_min;         /* T, min         (REGISTRO_ORBITA) */
-    double aceleracion;         /* a, m/s^2       (REGISTRO_PULSO)  */
-    double duracion;            /* dt, s          (REGISTRO_PULSO)  */
-    double velocidad_lateral;   /* dv, m/s        (REGISTRO_PULSO)  */
-    double desviacion_lateral;  /* d, m           (REGISTRO_PULSO)  */
-} RegistroHistorial;
+double calcular_aceleracion_centripeta(const DatosOrbita *orbita)
+{
+    double radio     = calcular_radio_orbital(orbita);
+    double velocidad = calcular_velocidad_orbital(orbita);
 
-typedef struct {
-    DatosOrbita orbita;
-    DatosPropulsor propulsor;
-    ResultadosOrbita res_orbita;
-    ResultadosPropulsor res_propulsor;
-    int orbita_calculada;
-    int pulso_calculado;
-    RegistroHistorial historial[MAX_HISTORIAL];
-    int cantidad_historial;
-} Simulacion;
+    return velocidad * velocidad / radio;
+}
 
-void   cargar_valores_originales(DatosOrbita *orbita, DatosPropulsor *propulsor);
-double calcular_radio_orbital(const DatosOrbita *orbita);
-double calcular_fuerza_gravitatoria(const DatosOrbita *orbita);
-double calcular_velocidad_orbital(const DatosOrbita *orbita);
-double calcular_periodo_orbital(const DatosOrbita *orbita);
-double calcular_aceleracion_centripeta(const DatosOrbita *orbita);
-double calcular_fuerza_centripeta(const DatosOrbita *orbita);
-void   calcular_orbita(const DatosOrbita *orbita, ResultadosOrbita *res);
+double calcular_fuerza_centripeta(const DatosOrbita *orbita)
+{
+    double radio     = calcular_radio_orbital(orbita);
+    double velocidad = calcular_velocidad_orbital(orbita);
 
-#endif /* ARTEMIS_H */
+    return orbita->masa_nave * velocidad * velocidad / radio;
+}
+
+void calcular_orbita(const DatosOrbita *orbita, ResultadosOrbita *res)
+{
+    res->radio_orbital          = calcular_radio_orbital(orbita);
+    res->fuerza_gravitatoria    = calcular_fuerza_gravitatoria(orbita);
+    res->velocidad_orbital      = calcular_velocidad_orbital(orbita);
+    res->periodo_s              = calcular_periodo_orbital(orbita);
+    res->periodo_min            = res->periodo_s / 60.0;
+    res->aceleracion_centripeta = calcular_aceleracion_centripeta(orbita);
+}
