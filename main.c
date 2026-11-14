@@ -1,22 +1,23 @@
 #include <stdio.h>
 #include "artemis.h"
-#include "propulsor.h"
+#include "reportes.h"
 #include "interfaz.h"
 
-static void mostrar_reporte_final(const Simulacion *sim)
-{
-    ui_titulo("REPORTE FINAL DE LA SESION");
-
-    if (!sim->orbita_calculada && !sim->pulso_calculado) {
-        printf("  No se realizaron calculos en esta sesion.\n");
-        return;
-    }
-    if (sim->orbita_calculada) {
-        mostrar_resultados_orbita(&sim->orbita, &sim->res_orbita);
-    }
-    if (sim->pulso_calculado) {
-        mostrar_resultados_propulsor(&sim->res_orbita, &sim->propulsor, &sim->res_propulsor);
-    }
-}
-
 int main(void)
+{
+    Simulacion sim = {0};
+    int estado;
+
+    cargar_valores_originales(&sim.orbita, &sim.propulsor);
+
+    estado = interfaz_ejecutar(&sim);
+    if (estado != 0) {
+        return estado;
+    }
+
+    ui_titulo("REPORTE FINAL DE LA SESION");
+    imprimir_reporte("RESUMEN", reporte_resumen, &sim);
+    imprimir_reporte("HISTORIAL DE CALCULOS", reporte_historial, &sim);
+    printf("\nGracias por usar el simulador Artemis.\n");
+    return 0;
+}
