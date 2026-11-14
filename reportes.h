@@ -3,13 +3,11 @@
 
 #include "artemis.h"
 
-#define LARGO_LINEA_REPORTE  72   /* maximo de caracteres por linea (con el '\0') */
-#define MAX_LINEAS_REPORTE   19   /* maximo de lineas que entran en pantalla */
+#define LARGO_LINEA_REPORTE  72
+#define MAX_LINEAS_REPORTE   19
 
-/* Recibe cada linea ya formateada. */
 typedef void (*EmisorLinea)(void *contexto, const char *texto);
 
-/* Un reporte: arma sus lineas a partir de la simulacion y las manda al emisor. */
 typedef void (*FuncionReporte)(const Simulacion *sim, EmisorLinea emitir, void *contexto);
 
 void reporte_parametros(const Simulacion *sim, EmisorLinea emitir, void *contexto);
