@@ -134,8 +134,6 @@ void reporte_resumen(const Simulacion *sim, EmisorLinea emitir, void *contexto)
     }
 }
 
-/* ---------------------------- Salida por consola ---------------------------- */
-
 void ui_titulo(const char *titulo)
 {
     printf("\n==== %s ====\n", titulo);
