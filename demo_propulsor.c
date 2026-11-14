@@ -1,24 +1,21 @@
-/*
- * demo_propulsor.c - Ejecuta SOLO el modulo del propulsor (Punto D), sin el resto del proyecto.
- * La orbita se arma aqui con la formula v = sqrt(G*MT/r), que en el proyecto completo
- * calcula el integrante 2 (artemis.c).
- */
 #include <stdio.h>
-#include <math.h>
 #include "artemis.h"
+#include "propulsor.h"
+#include "reportes.h"
 #include "validaciones.h"
 
 int main(void)
 {
-    ResultadoOrbital   orb = {0};
-    EventoPropulsor    ev;
-    ResultadoPropulsor prop;
+    Simulacion sim = {0};
 
-    orb.r = R_TIERRA + H_DEFECTO;                    /* h = 192 km */
-    orb.v = sqrt(G_CONST * M_TIERRA / orb.r);        /* velocidad orbital */
+    cargar_valores_originales(&sim.orbita, &sim.propulsor);
+    calcular_orbita(&sim.orbita, &sim.res_orbita);
+    sim.orbita_calculada = 1;
 
-    propulsor_leer_evento(&ev);
-    propulsor_calcular(&orb, &ev, &prop);
-    propulsor_mostrar(&orb, &ev, &prop);
+    propulsor_leer_datos(&sim.propulsor);
+    calcular_pulso_lateral(&sim.res_orbita, &sim.propulsor, &sim.res_propulsor);
+    sim.pulso_calculado = 1;
+
+    imprimir_reporte("PUNTO D - PROPULSOR LATERAL", reporte_pulso, &sim);
     return 0;
 }
