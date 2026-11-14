@@ -89,4 +89,4 @@ double calcular_aceleracion_centripeta(const DatosOrbita *orbita);
 double calcular_fuerza_centripeta(const DatosOrbita *orbita);
 void   calcular_orbita(const DatosOrbita *orbita, ResultadosOrbita *res);
 
-#endif /* ARTEMIS_H */
+#endif 
