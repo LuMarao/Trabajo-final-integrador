@@ -58,6 +58,9 @@ typedef struct {
     double separacion_maxima;   /* separacion lateral maxima, m */
 } ResultadosPropulsor;
 
+/* ===================== Historial de calculos ===================== */
+#define MAX_HISTORIAL    15            /* cantidad maxima de registros guardados */
+
 typedef enum {
     REGISTRO_ORBITA = 1,
     REGISTRO_PULSO
@@ -87,6 +90,7 @@ typedef struct {
     int cantidad_historial;
 } Simulacion;
 
+/* ===================== Logica de la orbita (artemis.c) ===================== */
 void   cargar_valores_originales(DatosOrbita *orbita, DatosPropulsor *propulsor);
 double calcular_radio_orbital(const DatosOrbita *orbita);
 double calcular_fuerza_gravitatoria(const DatosOrbita *orbita);
