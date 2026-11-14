@@ -2,7 +2,6 @@
 #include "artemis.h"
 #include "historial.h"
 
-/* Reserva un registro al final; si el historial esta lleno, descarta el mas antiguo. */
 static RegistroHistorial *reservar_registro(Simulacion *sim)
 {
     RegistroHistorial *registro;
