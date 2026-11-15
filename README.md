@@ -63,6 +63,39 @@ Como referencia, utilizando los datos iniciales se obtienen aproximadamente los 
 - El máximo de `dt` (60 s) es cerca del 1 % del período orbital (88 min). Así el pulso es corto y se lo puede tratar como instantáneo. Con los máximos (`a = 10 m/s²`, `dt = 60 s`) la velocidad lateral es de 600 m/s, menos del 8 % de la velocidad orbital, y la nave sigue en una órbita baja casi circular.
 - Los rangos están definidos en un solo lugar (`artemis.h`: `ACEL_PULSO_MIN/MAX` y `DT_PULSO_MIN/MAX`). La ventana, la consola y las pruebas los toman de ahí.
 
+## Requisitos del programa
+
+Windows con MSYS2 instalado, usando la terminal UCRT64.
+Compilador GCC: pacman -S mingw-w64-ucrt-x86_64-gcc
+Librería SDL3 (versión 3.2.0 o superior): pacman -S mingw-w64-ucrt-x86_64-sdl3
+Herramientas de compilación: pacman -S make pkg-config
+
+## Pasos para ejecutar el programa
+
+-Abrir la terminal MSYS2 UCRT64 y entrar a la carpeta del proyecto:
+
+-Ejecutar el siguente comando y reemplazar "usuario" por el usuario del equipo donde se esté ejecutando:
+
+cd /c/Users/(Usuario)/Downloads/Trabajo-final-integrador-actualizado
+
+-Compilar con make, o con GCC directamente con el siguiente comando:
+
+gcc -Wall -Wextra -O2 -o main.exe main.c interfaz.c artemis.c propulsor.c historial.c reportes.c validaciones.c $(pkg-config --cflags --libs sdl3) -lm
+
+-Ejecutar el programa con el siguiente comando:
+
+./main.exe
+
+Esto creará un archivo llamado "main.exe", el cuál nos permitirá poder ejecutar el programa desde la carpeta del proyecto, dandole doble click en el archivo.
+
+(el programa también se estará ejecutando de fondo por consola y se mostraran los procedimientos realizados por la terminal de MSYS2).
+
+## Uso
+
+Menú principal: teclas 1 a 6, flechas, Enter, o clic del mouse.
+En los formularios: Tab cambia de campo, Enter confirma y Esc cancela. Se acepta coma o punto decimal.
+Al cerrar la ventana, el programa imprime el reporte final y el historial en la terminal.
+
 ## Funcionamiento del programa
 
 Al iniciar, el programa carga los valores iniciales del escenario y muestra un menú con las operaciones disponibles.
@@ -86,24 +119,6 @@ El proyecto se encuentra organizado en módulos para separar la interfaz, los c�
 - `test_propulsor.c`: contiene pruebas automáticas para verificar los cálculos, validaciones, historial y reportes.
 - `Makefile`: automatiza la compilación, ejecución de pruebas y demostraciones.
 - `.gitignore`: especifica los archivos generados que Git debe ignorar.
-
-## Compilación y ejecución
-
-Una vez que estén integrados los archivos del proyecto, se podrá compilar desde una terminal utilizando GCC o desde el propio archivo creado por el MAKEFILE llamado "artemis.exe".
-
-El comando previsto es:
-
-```bash
-gcc -Wall -Wextra -std=c99 main.c artemis.c propulsor.c validaciones.c -o artemis -lm
-```
-
-Para ejecutar el programa:
-
-```bash
-./artemis
-```
-
-La opción `-lm` permite utilizar las funciones matemáticas de la biblioteca correspondiente.
 
 ## Uso de inteligencia artificial
 
@@ -145,13 +160,10 @@ Crear la documentación del proyecto incluyendo:
 - Instrucciones de compilación y ejecución.
 - Registro del uso de IA, herramientas, consultas y validación del código.
 
-### 3. Diagrama
-Crear un diagrama Mermaid que represente el flujo del programa: inicio, menú, validaciones, cálculos orbitales, propulsión lateral, resultados y salida.
-
-### 4. Plan de pruebas
+### 3. Plan de pruebas
 Crear `PLAN_DE_PRUEBAS.md` con casos de prueba, entradas, resultados esperados y estados pendientes de comprobar. Incluir cálculos orbitales, propulsión lateral, entradas correctas e incorrectas, validaciones y navegación del menú.
 
-### 5. Conceptos de C
+### 4. Conceptos de C
 Revisá que el proyecto utilice y aplique correctamente los siguientes conceptos de la materia:
 - Arreglos.
 - Listas.
@@ -162,7 +174,7 @@ Revisá que el proyecto utilice y aplique correctamente los siguientes conceptos
 
 Explicá dónde aparecen estos conceptos en el proyecto. Si alguno todavía no está implementado, indicá cómo podría incorporarse de manera coherente, sin agregar código innecesario ni inventar funcionalidades.
 
-### 6. Integración y Git
+### 5. Integración y Git
 Indicá cómo se relacionan los módulos, qué archivos comparten estructuras y funciones, y cómo compilar el proyecto completo. Revisá también qué cambios corresponden a mi parte y proponé commits descriptivos. No modifiques archivos de mis compañeros ni realices commits sin mi autorización.
 
 ### IMPORTANTE
